@@ -2,42 +2,43 @@ package com.upf.violencedetectionbackendlogic.services;
 
 import com.upf.violencedetectionbackendlogic.dao.entities.User;
 import com.upf.violencedetectionbackendlogic.dao.repositories.UserRepository;
+import com.upf.violencedetectionbackendlogic.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    @Autowired
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        System.out.println("loadUserByUsername called with email = " + email);
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
-
-        User userEntity = optionalUser.get();
-        // Return a Spring Security User (fully qualify the class to avoid ambiguity)
-        return org.springframework.security.core.userdetails.User
-                .withUsername(userEntity.getEmail())
-                .password(userEntity.getPassword())
-                .authorities("ROLE_SECURITY_AGENT")
-                .build();
+        return new CustomUserDetails(optionalUser.get());
     }
 
-    // Helper method to create/save new users
-    public User saveUser(String email, String rawPassword) {
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(encoder.encode(rawPassword));
-        return userRepository.save(user);
+    public UserDetails loadUserById(UUID id){
+        System.out.println("loadUserById called with id = " + id);
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            throw new UsernameNotFoundException("User not found with id: " + id);
+        }
+        return new CustomUserDetails(optionalUser.get());
     }
 }

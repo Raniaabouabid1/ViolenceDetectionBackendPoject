@@ -1,23 +1,28 @@
 package com.upf.violencedetectionbackendlogic.security;
 
+import com.upf.violencedetectionbackendlogic.dao.entities.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.UUID;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private final User user; // your domain user
 
-    public CustomUserDetails(org.springframework.security.core.userdetails.User user) {
+    public CustomUserDetails(User user) {
         this.user = user;
     }
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Return user authorities; for simplicity, we'll return a single role.
-        return java.util.Collections.singleton(() -> "ROLE_USER");
+        // For simplicity, return a single role.
+        return Collections.singleton(() -> "ROLE_SECURITY_AGENT");
     }
 
     @Override
@@ -25,28 +30,50 @@ public class CustomUserDetails implements UserDetails {
         return user.getPassword();
     }
 
+    public UUID getId(){
+        return user.getId();
+    }
+
     @Override
     public String getUsername() {
-        return user.getUsername();
+        // Use email as username
+        return user.getEmail();
     }
 
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
-
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
-
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
     @Override
     public boolean isEnabled() {
         return true;
     }
+
+    // Override equals and hashCode to avoid recursive calls
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CustomUserDetails)) return false;
+        CustomUserDetails that = (CustomUserDetails) o;
+        return Objects.equals(getUsername(), that.getUsername());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUsername());
+    }
+
+    @Override
+    public String toString() {
+        return "CustomUserDetails{username=" + getUsername() + "}";
+    }
+
 }

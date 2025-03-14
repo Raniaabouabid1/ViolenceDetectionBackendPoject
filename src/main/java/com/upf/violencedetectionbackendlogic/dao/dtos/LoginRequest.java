@@ -1,10 +1,15 @@
 package com.upf.violencedetectionbackendlogic.dao.dtos;
 
+import lombok.Data;
 
+@Data
 public class LoginRequest {
     private String email;
     private String password;
 
+    // No-arg constructor
+    public LoginRequest() {
+    }
     public LoginRequest(String email, String password) {
         this.email = email;
         this.password = password;
