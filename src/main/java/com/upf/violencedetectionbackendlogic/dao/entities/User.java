@@ -49,12 +49,12 @@ public class User {
     @NotBlank
     @Pattern(regexp = "\\+212[6-7][0-9]{8}", message = "Must be a valid Moroccan phone number")
     @Column(name = "phone_number", nullable = false, unique = true)
-    protected String telephone;
+    protected String PhoneNumber;
 
     @NotNull
-    @Column(name = "password", unique = true, nullable = false)
+    @Column(name = "password", unique = true, nullable = false)/*
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character")
+            message = "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character")*/
     private String password;
 
     @NotNull
@@ -65,9 +65,10 @@ public class User {
     @Column(name = "profile_image", length = 5_000_000)
     private byte[] profileImage;
 
+
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
-    @JsonManagedReference
+    @JsonBackReference
     protected Role role;
 
     // Each user belongs to one section; make sure the foreign key is nullable.

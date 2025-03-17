@@ -1,6 +1,7 @@
 package com.upf.violencedetectionbackendlogic.dao.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.upf.violencedetectionbackendlogic.dao.entities.enumerations.RoleEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = "users")
 @Table(name="role")
 public class Role {
 
@@ -28,6 +29,6 @@ public class Role {
     private RoleEnum role;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    @JsonBackReference
+    @JsonManagedReference
     private List<User> users = new ArrayList<>();
 }
