@@ -2,10 +2,14 @@ package com.upf.violencedetectionbackendlogic.controllers;
 
 import com.upf.violencedetectionbackendlogic.dao.dtos.UserDto;
 import com.upf.violencedetectionbackendlogic.dao.entities.User;
+import com.upf.violencedetectionbackendlogic.dao.repositories.RoleRepository;
 import com.upf.violencedetectionbackendlogic.dao.repositories.UserRepository;
 import com.upf.violencedetectionbackendlogic.dao.dtos.ProfileDto;
+import com.upf.violencedetectionbackendlogic.dao.entities.Role;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.upf.violencedetectionbackendlogic.dao.entities.enumerations.RoleEnum;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +21,61 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
+
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto createdUserDto) {
+        System.out.println("adding a user: " + createdUserDto);
+
+        User user = new User();
+        user.setFirstName(createdUserDto.getFirstName());
+        user.setLastName(createdUserDto.getLastName());
+        user.setBirthDate(createdUserDto.getBirthDate());
+        user.setEmail(createdUserDto.getEmail());
+        user.setPhoneNumber(createdUserDto.getPhoneNumber());
+        user.setPassword(createdUserDto.getPassword());
+
+        // Convert the incoming role string to RoleEnum
+        RoleEnum roleEnum;
+        try {
+            roleEnum = RoleEnum.valueOf(createdUserDto.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // If conversion fails, return a bad request
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Fetch the Role entity using the RoleEnum
+        Role role = roleRepository.findByRole(roleEnum);
+        if (role == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        user.setRole(role);
+
+        User savedUser = userRepository.save(user);
+
+        UserDto dto = new UserDto();
+        dto.setId(savedUser.getId());
+        dto.setFirstName(savedUser.getFirstName());
+        dto.setLastName(savedUser.getLastName());
+        dto.setEmail(savedUser.getEmail());
+        dto.setPhoneNumber(savedUser.getPhoneNumber());
+        dto.setBirthDate(savedUser.getBirthDate());
+        if (savedUser.getRole() != null) {
+            dto.setRole(savedUser.getRole().getRole().name());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+
+
+
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ProfileDto> getUser(@PathVariable UUID id) {
@@ -29,10 +84,8 @@ public class UserController {
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         User user = optionalUser.get();
 
-        // Build the DTO
         ProfileDto dto = new ProfileDto();
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
@@ -49,11 +102,8 @@ public class UserController {
         if (user.getRole() != null) {
             dto.setRoleName(user.getRole().getRole().name());
         }
-
-
         return ResponseEntity.ok(dto);
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
@@ -65,12 +115,38 @@ public class UserController {
         User user = optionalUser.get();
         userRepository.delete(user);
         return ResponseEntity.noContent().build();
-
-
     }
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers(
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String searchEmail,
+            @RequestParam(required = false) String role) {
+            System.out.println("this is my search email : "+searchEmail);
+            System.out.println("this is my search fullname : "+fullName);
+            System.out.println("this is my role : "+role);
+
         List<User> users = userRepository.findAll();
+
+        // Filter by full name if provided.
+        if (fullName != null && !fullName.isEmpty()) {
+            String lowerFullName = fullName.toLowerCase();
+            users = users.stream().filter(user -> {
+                String combinedName = (user.getFirstName() + " " + user.getLastName()).toLowerCase();
+                return combinedName.contains(lowerFullName);
+            }).collect(Collectors.toList());
+        }
+
+        // Filter by email if provided.
+        if (searchEmail != null && !searchEmail.isEmpty()) {
+            String lowerEmail = searchEmail.toLowerCase();
+            users = users.stream().filter(user -> user.getEmail().toLowerCase().contains(lowerEmail))
+                    .collect(Collectors.toList());
+        }
+        if (role != null && !role.isEmpty()) {
+            users = users.stream().filter(user -> user.getRole() != null &&
+                            user.getRole().getRole().name().equalsIgnoreCase(role))
+                    .collect(Collectors.toList());
+        }
 
         List<UserDto> userDtos = users.stream().map(user -> {
             UserDto dto = new UserDto();
@@ -80,16 +156,12 @@ public class UserController {
             dto.setEmail(user.getEmail());
             dto.setPhoneNumber(user.getPhoneNumber());
             dto.setBirthDate(user.getBirthDate());
-
-            // If user.getRole() is non-null, flatten the role name:
             if (user.getRole() != null) {
-                dto.setRoleName(user.getRole().getRole().name());
+                dto.setRole(user.getRole().getRole().name());
             }
-
             return dto;
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(userDtos);
     }
-
 }

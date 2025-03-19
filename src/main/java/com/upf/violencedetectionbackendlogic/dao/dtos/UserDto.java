@@ -1,5 +1,7 @@
 package com.upf.violencedetectionbackendlogic.dao.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.upf.violencedetectionbackendlogic.dao.entities.Role;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,18 +17,21 @@ public class UserDto {
     private UUID id;
     private String phoneNumber;
     private LocalDate birthDate;
-    private String roleName;
+    @JsonProperty("role")  // This maps the JSON property "role" to the field roleName.
+    private String role;
     private String assignedSection;
     private String password;
 
     public UserDto() {}
 
-    public UserDto(String firstName, String lastName, String email, String phoneNumber, LocalDate birthDate) {
+    public UserDto(String firstName, String lastName, String email, String phoneNumber, LocalDate birthDate,String roleName,String password) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.birthDate = birthDate;
+        this.role = roleName;
+        this.password = password;
     }
 
     public UserDto(String firstName, String lastName, String email, UUID id, String phoneNumber, LocalDate birthDate, String roleName, String assignedSection, String password) {
@@ -36,7 +41,7 @@ public class UserDto {
         this.id = id;
         this.phoneNumber = phoneNumber;
         this.birthDate = birthDate;
-        this.roleName = roleName;
+        this.role = roleName;
         this.assignedSection = assignedSection;
         this.password = password;
 

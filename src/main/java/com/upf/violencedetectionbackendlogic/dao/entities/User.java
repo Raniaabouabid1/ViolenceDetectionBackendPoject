@@ -1,7 +1,6 @@
 package com.upf.violencedetectionbackendlogic.dao.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -80,5 +79,10 @@ public class User {
 
     @OneToMany(mappedBy = "recipientUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
+
+    public String getRoleName(String roleName) {
+        return this.getRole().toString();
+    }
+
 
 }
