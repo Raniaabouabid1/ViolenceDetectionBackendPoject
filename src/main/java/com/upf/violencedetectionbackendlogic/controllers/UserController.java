@@ -72,11 +72,6 @@ public class UserController {
     }
 
 
-
-
-
-
-
     @GetMapping("/{id}")
     public ResponseEntity<ProfileDto> getUser(@PathVariable UUID id) {
         System.out.println("this is my id : "+id);
@@ -164,4 +159,55 @@ public class UserController {
 
         return ResponseEntity.ok(userDtos);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto updatedUserDto) {
+        // Look up the existing user by id
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = optionalUser.get();
+        // Update user fields from DTO
+        user.setFirstName(updatedUserDto.getFirstName());
+        user.setLastName(updatedUserDto.getLastName());
+        user.setBirthDate(updatedUserDto.getBirthDate());
+        user.setEmail(updatedUserDto.getEmail());
+        user.setPhoneNumber(updatedUserDto.getPhoneNumber());
+        // If you want to allow updating the password, you can do so here (with proper security checks)
+        user.setPassword(updatedUserDto.getPassword());
+
+        // Update the role if provided
+        String roleString = updatedUserDto.getRole();
+        if (roleString != null) {
+            try {
+                RoleEnum roleEnum = RoleEnum.valueOf(roleString.toUpperCase());
+                Role role = roleRepository.findByRole(roleEnum);
+                if (role == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                user.setRole(role);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+
+        // Save updated user
+        User savedUser = userRepository.save(user);
+
+        // Map saved user to UserDto and return
+        UserDto dto = new UserDto();
+        dto.setId(savedUser.getId());
+        dto.setFirstName(savedUser.getFirstName());
+        dto.setLastName(savedUser.getLastName());
+        dto.setEmail(savedUser.getEmail());
+        dto.setPhoneNumber(savedUser.getPhoneNumber());
+        dto.setBirthDate(savedUser.getBirthDate());
+        if (savedUser.getRole() != null) {
+            dto.setRole(savedUser.getRole().getRole().name());
+        }
+        return ResponseEntity.ok(dto);
+    }
+
 }
