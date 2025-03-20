@@ -10,7 +10,7 @@ public class ProfileDto {
     private String firstName;
     private String lastName;
     private String email;
-    private String telephone;
+    private String phoneNumber;
     private LocalDate birthDate;
     private String roleName;
     private String sectionName;

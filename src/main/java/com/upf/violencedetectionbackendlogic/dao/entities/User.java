@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import java.security.PrivateKey;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -41,14 +43,14 @@ public class User {
 
     @NotNull
     @NotBlank
-    @Email
+    @Email(message = "Invalid email format")
     @Column(name="email", nullable=false, unique=true)
     private String email;
 
     @NotBlank
     @Pattern(regexp = "\\+212[6-7][0-9]{8}", message = "Must be a valid Moroccan phone number")
     @Column(name = "phone_number", nullable = false, unique = true)
-    protected String PhoneNumber;
+    private  String phoneNumber;
 
     @NotNull
     @Column(name = "password", unique = true, nullable = false)/*
@@ -83,6 +85,7 @@ public class User {
     public String getRoleName(String roleName) {
         return this.getRole().toString();
     }
+
 
 
 }

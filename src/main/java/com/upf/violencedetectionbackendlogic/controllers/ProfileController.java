@@ -30,7 +30,7 @@ public class ProfileController {
         this.passwordEncoder = passwordEncoder;
     }
     @PatchMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable UUID id, @RequestBody UserDto updateDto) {
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDto updateDto) {
        System.out.println("update dto "+updateDto);
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
@@ -46,12 +46,8 @@ public class ProfileController {
         if (updateDto.getLastName() != null) {
             user.setLastName(updateDto.getLastName());
         }
-        if (updateDto.getEmail() != null) {
-            user.setEmail(updateDto.getEmail());
-        }
-        if (updateDto.getPhoneNumber() != null) {
-            user.setPhoneNumber(updateDto.getPhoneNumber());
-        }
+
+
         if (updateDto.getBirthDate() != null) {
             user.setBirthDate(updateDto.getBirthDate());
         }
@@ -61,10 +57,35 @@ public class ProfileController {
             user.setPassword(encodedPassword);
         }
 
+        if (updateDto.getEmail() != null) {
+            // Only check if the new email is different from the current one
+            if (!updateDto.getEmail().equalsIgnoreCase(user.getEmail())) {
+                Optional<User> existingUser = userRepository.findByEmail(updateDto.getEmail());
+                if (existingUser.isPresent()) {
+                    System.out.println("already exists!!!!!!!!!");
+                    // Return a 409 Conflict response with a message
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("email alreay exists");
+                }
+                user.setEmail(updateDto.getEmail());
+            }
+        }
+        if (updateDto.getPhoneNumber() != null) {
+            // Only check if the new email is different from the current one
+            if (!updateDto.getPhoneNumber().equalsIgnoreCase(user.getPhoneNumber())) {
+                Optional<User> existingUser = userRepository.findByPhoneNumber(updateDto.getPhoneNumber());
+                if (existingUser.isPresent()) {
+                    System.out.println("already exists!!!!!!!!!");
+                    // Return a 409 Conflict response with a message
+                    return ResponseEntity.status(HttpStatus.CONFLICT).body("phone number already exists");
+                }
+                user.setPhoneNumber(updateDto.getPhoneNumber());
+            }
+        }
         User updatedUser = userRepository.save(user);
         System.out.println("updated user "+updatedUser);
         return ResponseEntity.ok(updatedUser);
     }
+
 
     // Upload or update profile image
     @PutMapping("/{userId}/profile-image")

@@ -85,7 +85,7 @@ public class UserController {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
-        dto.setTelephone(user.getPhoneNumber());
+        dto.setPhoneNumber(user.getPhoneNumber());
         dto.setBirthDate(user.getBirthDate());
         if(dto.getSectionName() != null){
             dto.setSectionName(user.getSection().getName());
