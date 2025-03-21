@@ -6,8 +6,14 @@ import com.upf.violencedetectionbackendlogic.dao.repositories.RoleRepository;
 import com.upf.violencedetectionbackendlogic.dao.repositories.UserRepository;
 import com.upf.violencedetectionbackendlogic.dao.dtos.ProfileDto;
 import com.upf.violencedetectionbackendlogic.dao.entities.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.upf.violencedetectionbackendlogic.dao.entities.enumerations.RoleEnum;
 
@@ -22,10 +28,12 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserController(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping
@@ -38,7 +46,9 @@ public class UserController {
         user.setBirthDate(createdUserDto.getBirthDate());
         user.setEmail(createdUserDto.getEmail());
         user.setPhoneNumber(createdUserDto.getPhoneNumber());
-        user.setPassword(createdUserDto.getPassword());
+
+        String encodedPassword = passwordEncoder.encode(createdUserDto.getPassword());
+        user.setPassword(encodedPassword);
 
         // Convert the incoming role string to RoleEnum
         RoleEnum roleEnum;
@@ -112,38 +122,33 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers(
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(required = false) String fullName,
             @RequestParam(required = false) String searchEmail,
             @RequestParam(required = false) String role) {
-            System.out.println("this is my search email : "+searchEmail);
-            System.out.println("this is my search fullname : "+fullName);
-            System.out.println("this is my role : "+role);
 
-        List<User> users = userRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> userPage = userRepository.findAll(pageable);
 
-        // Filter by full name if provided.
+        List<User> filteredUsers = userPage.getContent();
+
         if (fullName != null && !fullName.isEmpty()) {
-            String lowerFullName = fullName.toLowerCase();
-            users = users.stream().filter(user -> {
-                String combinedName = (user.getFirstName() + " " + user.getLastName()).toLowerCase();
-                return combinedName.contains(lowerFullName);
-            }).collect(Collectors.toList());
+            String lower = fullName.toLowerCase();
+            filteredUsers = filteredUsers.stream().filter(user -> (user.getFirstName() + " " + user.getLastName()).toLowerCase().contains(lower)).toList();
         }
 
-        // Filter by email if provided.
         if (searchEmail != null && !searchEmail.isEmpty()) {
-            String lowerEmail = searchEmail.toLowerCase();
-            users = users.stream().filter(user -> user.getEmail().toLowerCase().contains(lowerEmail))
-                    .collect(Collectors.toList());
-        }
-        if (role != null && !role.isEmpty()) {
-            users = users.stream().filter(user -> user.getRole() != null &&
-                            user.getRole().getRole().name().equalsIgnoreCase(role))
-                    .collect(Collectors.toList());
+            filteredUsers = filteredUsers.stream().filter(user -> user.getEmail().toLowerCase().contains(searchEmail.toLowerCase())).toList();
         }
 
-        List<UserDto> userDtos = users.stream().map(user -> {
+        if (role != null && !role.isEmpty()) {
+            filteredUsers = filteredUsers.stream().filter(user -> user.getRole() != null &&
+                    user.getRole().getRole().name().equalsIgnoreCase(role)).toList();
+        }
+
+        List<UserDto> dtos = filteredUsers.stream().map(user -> {
             UserDto dto = new UserDto();
             dto.setId(user.getId());
             dto.setFirstName(user.getFirstName());
@@ -155,30 +160,31 @@ public class UserController {
                 dto.setRole(user.getRole().getRole().name());
             }
             return dto;
-        }).collect(Collectors.toList());
+        }).toList();
 
-        return ResponseEntity.ok(userDtos);
+        Page<UserDto> dtoPage = new PageImpl<>(dtos, pageable, userPage.getTotalElements());
+
+        return ResponseEntity.ok(dtoPage);
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto updatedUserDto) {
-        // Look up the existing user by id
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         User user = optionalUser.get();
-        // Update user fields from DTO
         user.setFirstName(updatedUserDto.getFirstName());
         user.setLastName(updatedUserDto.getLastName());
         user.setBirthDate(updatedUserDto.getBirthDate());
         user.setEmail(updatedUserDto.getEmail());
         user.setPhoneNumber(updatedUserDto.getPhoneNumber());
-        // If you want to allow updating the password, you can do so here (with proper security checks)
-        user.setPassword(updatedUserDto.getPassword());
 
-        // Update the role if provided
+        String encodedPassword = passwordEncoder.encode(updatedUserDto  .getPassword());
+        user.setPassword(encodedPassword);
+
         String roleString = updatedUserDto.getRole();
         if (roleString != null) {
             try {
@@ -193,10 +199,8 @@ public class UserController {
             }
         }
 
-        // Save updated user
         User savedUser = userRepository.save(user);
 
-        // Map saved user to UserDto and return
         UserDto dto = new UserDto();
         dto.setId(savedUser.getId());
         dto.setFirstName(savedUser.getFirstName());
@@ -209,5 +213,4 @@ public class UserController {
         }
         return ResponseEntity.ok(dto);
     }
-
 }
