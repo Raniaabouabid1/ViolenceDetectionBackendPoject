@@ -36,6 +36,24 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<User>> getUnassignedUsers() {
+        List<User> users = userRepository.findUsersWithoutSection();
+        return ResponseEntity.ok(users);
+    }
+    @GetMapping("/for-section/{sectionId}")
+    public ResponseEntity<List<User>> getAssignedAndUnassignedUsers(@PathVariable UUID sectionId) {
+        List<User> users = userRepository.findUsersForSection(sectionId);
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/assigned-to-section/{sectionId}")
+    public ResponseEntity<List<User>> getAssignedUsers(@PathVariable UUID sectionId) {
+        List<User> users = userRepository.findBySectionId(sectionId);
+        return ResponseEntity.ok(users);
+    }
+
+
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto createdUserDto) {
         System.out.println("adding a user: " + createdUserDto);
@@ -84,31 +102,35 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProfileDto> getUser(@PathVariable UUID id) {
-        System.out.println("this is my id : "+id);
+        System.out.println("this is my id : " + id);
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        User user = optionalUser.get();
 
+        User user = optionalUser.get();
         ProfileDto dto = new ProfileDto();
+
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setBirthDate(user.getBirthDate());
-        if(dto.getSectionName() != null){
-            dto.setSectionName(user.getSection().getName());
-        }else {
-            dto.setSectionName("");
-        }
 
+        if (user.getSection() != null) {
+            dto.setSectionName(user.getSection().getName());
+        } else {
+            dto.setSectionName(""); // or null if you prefer
+        }
 
         if (user.getRole() != null) {
             dto.setRoleName(user.getRole().getRole().name());
         }
+
+        System.out.println("📍 Section name returned in DTO: " + dto.getSectionName());
         return ResponseEntity.ok(dto);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {

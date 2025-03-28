@@ -1,5 +1,7 @@
 package com.upf.violencedetectionbackendlogic.dao.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -27,13 +29,14 @@ public class Section {
 
     @NotNull
     @Column(name = "coordinates")
-    private String Coordinates;
+    private String coordinates;
 
-    // One section can have many users; we do not cascade REMOVE so that users are not deleted.
     @OneToMany(mappedBy = "section", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonManagedReference
     private List<User> users;
 
-    @OneToMany(mappedBy = "section", cascade = CascadeType.PERSIST, orphanRemoval = false)
+    @OneToMany(mappedBy = "section", fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("section") // Avoid infinite loop
     private List<Camera> cameras;
+
 }

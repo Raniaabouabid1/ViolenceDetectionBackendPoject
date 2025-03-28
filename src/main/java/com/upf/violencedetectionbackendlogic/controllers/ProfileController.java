@@ -4,15 +4,11 @@ import com.upf.violencedetectionbackendlogic.dao.dtos.UserDto;
 import com.upf.violencedetectionbackendlogic.dao.entities.User;
 import com.upf.violencedetectionbackendlogic.dao.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
