@@ -1,5 +1,6 @@
 package com.upf.violencedetectionbackendlogic.controllers;
 
+import com.upf.violencedetectionbackendlogic.dao.dtos.ProfileDto;
 import com.upf.violencedetectionbackendlogic.dao.dtos.UserDto;
 import com.upf.violencedetectionbackendlogic.dao.entities.User;
 import com.upf.violencedetectionbackendlogic.dao.repositories.UserRepository;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/profile")
 public class ProfileController {
 
     private final UserRepository userRepository;
@@ -25,6 +26,38 @@ public class ProfileController {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfileDto> getUser(@PathVariable UUID id) {
+        System.out.println("this is my id : " + id);
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = optionalUser.get();
+        ProfileDto dto = new ProfileDto();
+
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setBirthDate(user.getBirthDate());
+
+        if (user.getSection() != null) {
+            dto.setSectionName(user.getSection().getName());
+        } else {
+            dto.setSectionName("");
+        }
+
+        if (user.getRole() != null) {
+            dto.setRoleName(user.getRole().getRole().name());
+        }
+
+        System.out.println("📍 Section name returned in DTO: " + dto.getSectionName());
+        return ResponseEntity.ok(dto);
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDto updateDto) {
        System.out.println("update dto "+updateDto);
@@ -83,7 +116,6 @@ public class ProfileController {
     }
 
 
-    // Upload or update profile image
     @PutMapping("/{userId}/profile-image")
     public ResponseEntity<String> uploadProfileImage(
             @PathVariable UUID userId,

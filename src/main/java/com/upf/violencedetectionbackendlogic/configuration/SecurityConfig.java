@@ -17,8 +17,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.util.Arrays;
+import java.util.Collections;
 
 import static org.springframework.security.config.Customizer.withDefaults;@Configuration
 public class SecurityConfig {
@@ -53,14 +52,14 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(
-                Arrays.asList(daoAuthenticationProvider()));
+                Collections.singletonList(daoAuthenticationProvider()));
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authManager = authenticationManager();
         JwtAuthenticationFilter jwtAuthFilter = new JwtAuthenticationFilter(authManager, jwtUtil);
-        jwtAuthFilter.setFilterProcessesUrl("/login"); // Ensure this is set
+        jwtAuthFilter.setFilterProcessesUrl("/login");
 
         http
                 .cors(withDefaults())
@@ -68,18 +67,26 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/login", "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cameras/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/sections/**").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/sections/**").permitAll()
+
+                        // Public endpoints
+                        .requestMatchers("/login", "/error", "/api/profile").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/profile/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/profile/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/profile/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users", "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users", "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users", "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/sections", "/api/sections/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/sections", "/api/sections/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/sections", "/api/sections/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/sections", "/api/sections/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/cameras", "/api/cameras/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
+
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -88,4 +95,9 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
+
+
+
 }

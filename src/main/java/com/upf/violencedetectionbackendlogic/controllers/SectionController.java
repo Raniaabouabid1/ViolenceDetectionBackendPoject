@@ -100,5 +100,43 @@ public class SectionController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Section> updateSection(@PathVariable UUID id, @RequestBody SectionDTO sectionDTO) {
+        return sectionRepository.findById(id).map(section -> {
+            // ✅ Update basic fields
+            section.setName(sectionDTO.name);
+            section.setCoordinates(sectionDTO.coordinates);
+
+            // ✅ Clear previous user assignments
+            section.getUsers().forEach(user -> user.setSection(null));
+            userRepository.saveAll(section.getUsers());
+
+            // ✅ Assign new users (if any)
+            List<User> newUsers = userRepository.findAllById(sectionDTO.userIds);
+            for (User user : newUsers) {
+                user.setSection(section);
+            }
+
+            // ✅ Clear previous camera assignments
+            section.getCameras().forEach(camera -> camera.setSection(null));
+            cameraRepository.saveAll(section.getCameras());
+
+            // ✅ Assign new cameras
+            List<Camera> newCameras = cameraRepository.findAllById(sectionDTO.cameraIds);
+            for (Camera camera : newCameras) {
+                camera.setSection(section);
+            }
+
+            section.setUsers(newUsers);
+            section.setCameras(newCameras);
+
+            Section updated = sectionRepository.save(section);
+            userRepository.saveAll(newUsers);
+            cameraRepository.saveAll(newCameras);
+
+            return ResponseEntity.ok(updated);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
 
 }

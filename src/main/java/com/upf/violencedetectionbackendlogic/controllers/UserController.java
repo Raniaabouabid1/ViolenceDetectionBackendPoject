@@ -120,7 +120,7 @@ public class UserController {
         if (user.getSection() != null) {
             dto.setSectionName(user.getSection().getName());
         } else {
-            dto.setSectionName(""); // or null if you prefer
+            dto.setSectionName("");
         }
 
         if (user.getRole() != null) {

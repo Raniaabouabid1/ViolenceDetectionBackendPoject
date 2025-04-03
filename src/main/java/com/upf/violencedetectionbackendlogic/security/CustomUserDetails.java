@@ -3,12 +3,10 @@ package com.upf.violencedetectionbackendlogic.security;
 import com.upf.violencedetectionbackendlogic.dao.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -18,12 +16,13 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // For simplicity, return a single role.
-        return Collections.singleton(() -> "ROLE_SECURITY_AGENT");
+        String roleName = user.getRole().getRole().name(); // RoleEnum value
+        System.out.println("this is my role name"+roleName);
+        return List.of(new SimpleGrantedAuthority(roleName));
     }
+
 
     @Override
     public String getPassword() {
