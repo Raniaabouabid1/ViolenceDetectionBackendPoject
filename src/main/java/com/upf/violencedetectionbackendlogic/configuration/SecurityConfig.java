@@ -70,6 +70,9 @@ public class SecurityConfig {
 
                         // Public endpoints
                         .requestMatchers("/login", "/error", "/api/profile").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/footages", "/api/footages/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cameras", "/api/cameras/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/profile/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/profile/**").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/profile/**").permitAll()
@@ -84,9 +87,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/sections", "/api/sections/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/sections", "/api/sections/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/cameras", "/api/cameras/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/cameras", "/api/cameras/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/cameras", "/api/cameras/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
-
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

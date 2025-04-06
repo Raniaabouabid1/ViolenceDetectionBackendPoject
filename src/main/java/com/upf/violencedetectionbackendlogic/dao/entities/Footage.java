@@ -1,20 +1,17 @@
 package com.upf.violencedetectionbackendlogic.dao.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
-@Table(name = "footage")
+
+/*
 public class Footage {
 
     @Id
@@ -35,10 +32,45 @@ public class Footage {
     private String footageServerLocation;
 
     @ManyToOne
-    @JoinColumn(name = "camera_id", nullable = false)
+    @JoinColumn(name = "camera_id")
+    @JsonBackReference("camera-footage")
     private Camera camera;
+
 
     @OneToMany(mappedBy = "footage", fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Blacklist> blacklists;
 }
+*/
+
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "footage")
+public class Footage {
+
+    @Id
+    @GeneratedValue(generator = "UUID")
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID id;
+
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
+/*
+    @Lob
+    @Column(name = "frame_data")
+    private byte[] frameData; // Optional: store JPEG frames*/
+
+    @Column(name = "file_path")
+    private String filePath;
+
+
+    @ManyToOne
+    @JoinColumn(name = "camera_id")
+    @JsonBackReference("camera-footage")
+    private Camera camera;
+}
+

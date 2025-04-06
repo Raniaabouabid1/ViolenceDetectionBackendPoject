@@ -1,5 +1,6 @@
 package com.upf.violencedetectionbackendlogic.dao.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,10 +30,10 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User recipientUser;
 
+
     @ManyToOne
     @JoinColumn(name = "camera_id", nullable = false)
+    @JsonBackReference("camera-notification")
     private Camera senderCamera;
-
-
 
 }

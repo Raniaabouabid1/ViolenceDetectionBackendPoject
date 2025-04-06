@@ -35,8 +35,10 @@ public class Section {
     @JsonManagedReference
     private List<User> users;
 
+
     @OneToMany(mappedBy = "section", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("section") // Avoid infinite loop
+    @JsonManagedReference("camera-section")
     private List<Camera> cameras;
+
 
 }

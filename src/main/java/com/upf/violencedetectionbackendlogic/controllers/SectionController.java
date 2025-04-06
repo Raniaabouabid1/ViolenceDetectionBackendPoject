@@ -31,6 +31,20 @@ public class SectionController {
         this.cameraRepository = cameraRepository;
     }
 
+    // In SectionController.java
+
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<Section>> getSectionsWithoutCameras() {
+        List<Section> unassigned = sectionRepository.findAll()
+                .stream()
+                .filter(section -> section.getCameras() == null || section.getCameras().isEmpty())
+                .toList();
+
+        return ResponseEntity.ok(unassigned);
+    }
+
+
+
     @GetMapping
     public ResponseEntity<Page<Section>> getSections(
             @RequestParam(defaultValue = "") String name,
