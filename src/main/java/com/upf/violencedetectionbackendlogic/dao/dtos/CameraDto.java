@@ -16,6 +16,7 @@ public class CameraDto{
     private String sectionId;
     private String lastKnownIp;
     private String streamToken;
+    private int flaskPort;
 
    /* public CameraDto(UUID id, String name, String sectionName) {
         this.id = id;

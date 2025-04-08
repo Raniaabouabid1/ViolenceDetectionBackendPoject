@@ -29,6 +29,7 @@ public class CameraController {
         String streamUrl = payload.get("streamUrl");
         String name = payload.get("name");
         String sectionId = payload.get("sectionId");
+        String flaskPort = payload.get("flaskPort");
 
         System.out.println("📦 Parsed payload:");
         System.out.println(" - Name: " + name);
@@ -36,6 +37,7 @@ public class CameraController {
         System.out.println(" - IP Address: " + ip);
         System.out.println(" - Stream URL: " + streamUrl);
         System.out.println(" - Section ID: " + sectionId);
+        System.out.println(" - Port : " + flaskPort);
 
         if (token == null || ip == null || streamUrl == null || name == null) {
             System.out.println("❌ Missing one or more required fields!");
@@ -48,6 +50,9 @@ public class CameraController {
         camera.setStreamUrl(streamUrl);
         camera.setName(name);
         camera.setIsActive(true);
+        camera.setFlaskPort(Integer.parseInt(flaskPort));
+
+        System.out.println("my flask port : "+ camera.getFlaskPort());
 
         if (sectionId != null) {
             sectionRepository.findById(UUID.fromString(sectionId)).ifPresent(camera::setSection);
@@ -58,8 +63,22 @@ public class CameraController {
 
         try {
             System.out.println("🚀 Attempting to launch Python stream script...");
-            Process process = Runtime.getRuntime().exec("python D:\\stream_camera.py " + token);
-            System.out.println("✅ Python stream script triggered for token: " + token);
+            String pythonPath = "C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\python.exe";
+            String port = payload.get("flaskPort"); // <-- new field
+            Process p = Runtime.getRuntime().exec(
+                    pythonPath + " D:\\stream_camera.py " + token + " " + ip + " " + port
+            );
+
+
+/*
+            Process p = Runtime.getRuntime().exec(pythonPath + " D:\\stream_camera.py " + token + " " + ip);
+*/
+            Scanner errScanner = new Scanner(p.getErrorStream());
+            while (errScanner.hasNextLine()) {
+                System.err.println("🐍 PYTHON ERR >>> " + errScanner.nextLine());
+            }
+            errScanner.close();
+
         } catch (Exception e) {
             System.out.println("❌ Failed to trigger Python stream script:");
             e.printStackTrace();
@@ -80,7 +99,8 @@ public class CameraController {
                 cam.getSection() != null ? cam.getSection().getName() : null,
                 cam.getSection() != null ? cam.getSection().getId().toString() : null,
                 cam.getLastKnownIp(),
-                cam.getStreamToken()
+                cam.getStreamToken(),
+                cam.getFlaskPort()
         )).toList();
 
         return ResponseEntity.ok(dtoList);

@@ -36,6 +36,9 @@ public class Camera {
     @Column(name = "last_known_ip")
     private String lastKnownIp; // Changes dynamically
 
+    @Column(name = "flask_port")
+    private int flaskPort;
+
     @Column(name = "is_active")
     private Boolean isActive; // Camera is online or not
 
